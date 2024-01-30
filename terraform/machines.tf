@@ -34,10 +34,34 @@ resource "azurerm_network_interface" "jk_ni_public" {
   }
 }
 
-# Machine HAproxy
+resource "azurerm_network_interface" "jk_ni_odoo" {
+  name                = "ni-odoo-jade-kozan-frc"
+  location            = "France Central"
+  resource_group_name = azurerm_resource_group.jk_rg.name
 
-resource "azurerm_linux_virtual_machine" "jk_vm_haproxy" {
-  name                = "vm-jade-kozan-frc"
+  ip_configuration {
+    name                          = "Private"
+    subnet_id                     = azurerm_subnet.jk_sn.id
+    private_ip_address_allocation = "Dynamic"
+  }
+}
+
+resource "azurerm_network_interface" "jk_ni_psql" {
+  name                = "ni-psql-jade-kozan-frc"
+  location            = "France Central"
+  resource_group_name = azurerm_resource_group.jk_rg.name
+
+  ip_configuration {
+    name                          = "Private"
+    subnet_id                     = azurerm_subnet.jk_sn.id
+    private_ip_address_allocation = "Dynamic"
+  }
+}
+
+# Machine Reverse proxy
+
+resource "azurerm_linux_virtual_machine" "jk_vm_reverseproxy" {
+  name                = "vm-reverseproxy-jade-kozan-frc"
   resource_group_name = azurerm_resource_group.jk_rg.name
   location            = "France Central"
   size                = "Standard_B1s"
@@ -68,13 +92,13 @@ resource "azurerm_linux_virtual_machine" "jk_vm_haproxy" {
 # Machine Postgresql
 
 resource "azurerm_linux_virtual_machine" "jk_vm_psql" {
-  name                = "vm_psql_jade-kozan-frc"
+  name                = "vm-psql-jade-kozan-frc"
   resource_group_name = azurerm_resource_group.jk_rg.name
   location            = "France Central"
   size                = "Standard_B1s"
   admin_username      = "adminuser"
   network_interface_ids = [
-    azurerm_network_interface.jk_ni.id
+    azurerm_network_interface.jk_ni_psql.id
   ]
 
   admin_ssh_key {
@@ -98,13 +122,13 @@ resource "azurerm_linux_virtual_machine" "jk_vm_psql" {
 # Machine Odoo
 
 resource "azurerm_linux_virtual_machine" "jk_vm_odoo" {
-  name                = "vm_odoo_jade-kozan-frc"
+  name                = "vm-odoo-jade-kozan-frc"
   resource_group_name = azurerm_resource_group.jk_rg.name
   location            = "France Central"
   size                = "Standard_B1s"
   admin_username      = "adminuser"
   network_interface_ids = [
-    azurerm_network_interface.jk_ni.id
+    azurerm_network_interface.jk_ni_odoo.id
   ]
 
   admin_ssh_key {
