@@ -2,7 +2,7 @@ resource "azurerm_virtual_network" "vnet_odoo1" {
   name                = "vnet-odoo-vnet1-frc"
   resource_group_name = azurerm_resource_group.rg_odoo.name
   location            = azurerm_resource_group.rg_odoo.location
-  address_space       = ["10.0.0.0/16"]
+  address_space       = ["10.0.0.0/16"]d
 }
 
 resource "azurerm_subnet" "snet_vnet1_odoo1" {
