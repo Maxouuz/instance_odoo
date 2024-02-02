@@ -1,0 +1,9 @@
+---
+- name: playbook jump et config
+  hosts: localhost
+  tasks:
+    - name: Creation dynamique du .ssh/config
+      shell: terraform output -raw public_ip_reverse_proxy >> /home/vagrant/.ssh/config
+      shell: terraform output -raw private_ip_reverse_proxy >> /home/vagrant/.ssh/config
+      shell: terraform output -raw private_ip_psql >> /home/vagrant/.ssh/config
+      shell: terraform output -raw private_ip_odoo >> /home/vagrant/.ssh/config
