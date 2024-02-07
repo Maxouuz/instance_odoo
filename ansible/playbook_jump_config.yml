@@ -2,8 +2,29 @@
 - name: playbook jump et config
   hosts: localhost
   tasks:
-    - name: Creation dynamique du .ssh/config
-      shell: terraform output -raw public_ip_reverse_proxy >> /home/vagrant/.ssh/config
-      shell: terraform output -raw private_ip_reverse_proxy >> /home/vagrant/.ssh/config
-      shell: terraform output -raw private_ip_psql >> /home/vagrant/.ssh/config
-      shell: terraform output -raw private_ip_odoo >> /home/vagrant/.ssh/config
+    - name: Fichier host
+      shell: |
+        rm -rf /home/vagrant/.ssh/config
+        cat << EOF > /home/vagrant/.ssh/config
+        Host publicreverseproxy
+            Hostname $(terraform output -state=/home/vagrant/deploiement_odoo_but3/terraform/terraform.tfstate -raw public_ip_reverse_proxy)
+            User adminuser
+            ForwardAgent yes
+
+        Host privatereverseproxy
+            Hostname $(terraform output -state=/home/vagrant/deploiement_odoo_but3/terraform/terraform.tfstate -raw private_ip_reverse_proxy)
+            User adminuser
+            ForwardAgent yes
+
+        Host privatepsql
+            Hostname $(terraform output -state=/home/vagrant/deploiement_odoo_but3/terraform/terraform.tfstate -raw private_ip_psql)
+            User adminuser
+            ProxyJump publicreverseproxy
+            ForwardAgent yes
+
+        Host privateodoo
+            Hostname $(terraform output -state=/home/vagrant/deploiement_odoo_but3/terraform/terraform.tfstate -raw private_ip_odoo)
+            User adminuser
+            ProxyJump publicreverseproxy
+            ForwardAgent yes
+        EOF

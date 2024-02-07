@@ -66,6 +66,7 @@ resource "azurerm_linux_virtual_machine" "jk_vm_reverseproxy" {
   location            = "France Central"
   size                = "Standard_B1s"
   admin_username      = "adminuser"
+  computer_name       = "publicreverseproxy"
   network_interface_ids = [
     azurerm_network_interface.jk_ni_public.id,
     azurerm_network_interface.jk_ni.id
@@ -97,6 +98,7 @@ resource "azurerm_linux_virtual_machine" "jk_vm_psql" {
   location            = "France Central"
   size                = "Standard_B1s"
   admin_username      = "adminuser"
+  computer_name       = "privatepsql"
   network_interface_ids = [
     azurerm_network_interface.jk_ni_psql.id
   ]
@@ -110,7 +112,7 @@ resource "azurerm_linux_virtual_machine" "jk_vm_psql" {
     caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
   }
-
+   
   source_image_reference {
     publisher = "Debian"
     offer     = "debian-11"
@@ -127,6 +129,7 @@ resource "azurerm_linux_virtual_machine" "jk_vm_odoo" {
   location            = "France Central"
   size                = "Standard_B1s"
   admin_username      = "adminuser"
+  computer_name       = "privateodoo"
   network_interface_ids = [
     azurerm_network_interface.jk_ni_odoo.id
   ]
@@ -140,7 +143,7 @@ resource "azurerm_linux_virtual_machine" "jk_vm_odoo" {
     caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
   }
-
+  
   source_image_reference {
     publisher = "Debian"
     offer     = "debian-11"
