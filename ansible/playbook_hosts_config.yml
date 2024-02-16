@@ -1,0 +1,23 @@
+---
+- name: playbook hosts (inventaire)
+  hosts: localhost
+  tasks:
+    - name: Fichier host
+      shell: |
+        rm -rf /home/vagrant/deploiement_odoo_but3/ansible/hosts
+        cat << EOF > /home/vagrant/deploiement_odoo_but3/ansible/hosts
+        [publicproxy]
+        $(terraform output -state=/home/vagrant/deploiement_odoo_but3/terraform/terraform.tfstate -raw public_ip_reverse_proxy)
+
+        [privateproxy]
+        $(terraform output -state=/home/vagrant/deploiement_odoo_but3/terraform/terraform.tfstate -raw private_ip_reverse_proxy)
+
+        [psql]
+        $(terraform output -state=/home/vagrant/deploiement_odoo_but3/terraform/terraform.tfstate -raw private_ip_psql)
+
+        [odoo]
+        $(terraform output -state=/home/vagrant/deploiement_odoo_but3/terraform/terraform.tfstate -raw private_ip_odoo)
+
+        [odoo:vars]
+        ansible_ssh_common_args='-o ProxyCommand="ssh -W %h:%p -q adminuser@$(terraform output -state=/home/vagrant/deploiement_odoo_but3/terraform/terraform.tfstate -raw public_ip_reverse_proxy)"'
+        EOF
