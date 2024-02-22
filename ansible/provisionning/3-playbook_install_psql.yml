@@ -1,0 +1,43 @@
+---
+- name: Install postgres
+  hosts: db
+  become: true
+  tasks:
+    - name: install postgres
+      ansible.builtin.apt:
+        name: postgresql
+        state: present
+        update_cache: true
+
+    - name: install acl
+      ansible.builtin.apt:
+        name: acl
+        state: present
+
+    - name: Verify if python is installed
+      ansible.builtin.apt:
+        name: python3-pip
+        state: present
+
+    - name: Verify of psycopg is installed
+      ansible.builtin.pip:
+        name: psycopg2-binary
+        state: present
+
+    - name: add host on pg_hba
+      community.postgresql.postgresql_pg_hba:
+        address: "10.0.8.100"
+        contype: "host"
+        dest: "/etc/postgresql/12/main/pg_hba.conf"
+
+    - name: Change addresses on pg_hba
+      ansible.builtin.lineinfile:
+        dest: "/etc/postgresql/12/main/postgresql.conf"
+        regexp: '^#?listen_addresses='
+        line: "listen_addresses='0.0.0.0'"
+        state: present
+
+    - name: Restart postgresql
+      ansible.builtin.service:
+        name: postgresql
+        state: restarted

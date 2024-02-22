@@ -1,4 +1,3 @@
-
 ## Déploiement Odoo sur Azure
 
 

@@ -1,0 +1,27 @@
+- name: Instance psql
+  hosts: db
+  become: true
+  become_user: postgres
+  tasks:
+
+    - name: Create user
+      community.postgresql.postgresql_user:
+        user: "{{ item.split(' ')[0] }}_user"
+        password: root
+      loop: "{{ instances }}"
+
+    - name: give persimission to user
+      community.postgresql.postgresql_query:
+        query: "ALTER USER {{ item.split(' ')[0] }}_user CREATEDB;"
+      loop: "{{ instances }}"
+
+    - name: add instance host on pg_hba
+      community.postgresql.postgresql_pg_hba:
+        address: "10.0.8.100"
+        contype: "host"
+        users: "{{ item.split(' ')[0] }}_user"
+        databases: "{{ item.split(' ')[0] }}_db"
+        method: md5
+        dest: "/etc/postgresql/12/main/pg_hba.conf"
+      loop: "{{ instances }}"
+    

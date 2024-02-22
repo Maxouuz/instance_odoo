@@ -1,0 +1,55 @@
+---
+- hosts: db
+  vars:
+    local_save_dir: "/home/maxence/Documents/school/sae6/save_sql/"
+
+  tasks:
+    - name: Create .pgpass
+      ansible.builtin.file:
+        path: /home/dieu/.pgpass
+        mode: '0600'
+        state: touch
+      
+    - name: Écrire les informations dans le fichier .pgpass
+      ansible.builtin.lineinfile:
+        path: /home/dieu/.pgpass
+        line: "localhost:5432:{{ item.split(' ')[0] }}_db:{{ item.split(' ')[0] }}_user:root"
+      loop: "{{ instances }}"
+
+    - name: Créer les répertoires pour les instances
+      ansible.builtin.file:
+        path: "/home/dieu/{{ item.split(' ')[0] }}"
+        state: directory
+        owner: dieu
+        mode: '0755'
+      loop: "{{ instances }}"
+      become: yes
+    
+    - name: Vérifier si save.dump existe et le renommer si nécessaire sur la machine physique
+      ansible.builtin.shell: |
+        local_save="/home/maxence/Documents/school/sae6/save_sql/{{ item.split(' ')[0] }}/save.dump"
+        local_backup="/home/maxence/Documents/school/sae6/save_sql/{{ item.split(' ')[0] }}/save_old.dump"
+        if [ -f "$local_save" ]; then
+          mv "$local_save" "$local_backup"
+        fi
+      delegate_to: localhost
+      loop: "{{ instances }}"
+
+    - name: Sauvegarde des données sur la machine psql
+      ansible.builtin.command:
+        cmd: "pg_dump -h localhost -U {{ item.split(' ')[0] }}_user {{ item.split(' ')[0] }}_db --format=custom --no-password --file=/home/dieu/{{ item.split(' ')[0] }}/save.dump"
+      loop: "{{ instances }}"  
+
+    - name: Copier les sauvegardes de la machine psql vers la machine distante
+      ansible.builtin.fetch:
+        src: "/home/dieu/{{ item.split(' ')[0] }}/save.dump"
+        dest: "{{ local_save_dir }}{{ item.split(' ')[0] }}/save.dump"
+        flat: yes
+      loop: "{{ instances }}"
+
+
+    - name: Supprimer les sauvegardes de la machine psql
+      ansible.builtin.file:
+        path: "/home/dieu/{{ item.split(' ')[0] }}/save.dump"
+        state: absent
+      loop: "{{ instances }}"

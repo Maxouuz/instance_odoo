@@ -1,0 +1,19 @@
+---
+- name: playbook hosts (inventaire)
+  hosts: localhost
+  tasks:
+    - name: Fichier host
+      shell: |
+        rm -rf /home/maxence/Documents/school/sae6/ansible/hosts.ini
+        cat << EOF > /home/maxence/Documents/school/sae6/ansible/hosts.ini
+        [odoo]
+        $(terraform output -state=/home/maxence/Documents/school/sae6/terraform/terraform.tfstate -raw odoo_ip)
+
+        [rproxy]
+        $(terraform output -state=/home/maxence/Documents/school/sae6/terraform/terraform.tfstate -raw rproxy_ip)
+
+        [db]
+        $(terraform output -state=/home/maxence/Documents/school/sae6/terraform/terraform.tfstate -raw db_ip)
+
+        [all:vars]
+        ansible_user=dieu

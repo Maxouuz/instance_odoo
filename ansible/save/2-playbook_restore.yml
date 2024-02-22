@@ -1,0 +1,24 @@
+---
+- hosts: db
+  vars:
+    local_save: "/home/maxence/Documents/school/sae6/save_sql/"
+  
+  tasks:
+    - name: Copier la sauvegarde de la machine locale vers la machine distante
+      ansible.builtin.copy:
+        src: "{{ local_save }}/{{ item.split(' ')[0] }}/save.dump"
+        dest: "/home/dieu/{{ item.split(' ')[0] }}/save.dump"
+      loop: "{{ instances }}"
+
+    
+    - name: Restaurer la bdd avec la save sur la machine psql
+      ansible.builtin.command:
+        cmd: "pg_restore -U {{ item.split(' ')[0] }}_user -h localhost -d {{ item.split(' ')[0] }}_db /home/dieu/{{ item.split(' ')[0] }}/save.dump"
+      loop: "{{ instances }}"
+
+    
+    - name: Supprimer la save de la machine psql apres restauration
+      ansible.builtin.file:
+        path: "/home/dieu/{{ item.split(' ')[0] }}/save.dump"
+        state: absent
+      loop: "{{ instances }}"

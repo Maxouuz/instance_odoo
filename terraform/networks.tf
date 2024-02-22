@@ -1,13 +1,13 @@
-resource "azurerm_virtual_network" "jk_vn" {
-  name                = "nw-jade-kozan-frc"
+resource "azurerm_virtual_network" "odoo_vn" {
+  name                = "vn-${var.name}-${var.short}"
   address_space       = ["10.0.0.0/16"]
-  location            = "France Central"
-  resource_group_name = azurerm_resource_group.jk_rg.name
+  location            = azurerm_resource_group.rg_odoo.location
+  resource_group_name = azurerm_resource_group.rg_odoo.name
 }
 
-resource "azurerm_subnet" "jk_sn" {
-  name                 = "sn-jade-kozan-frc"
-  resource_group_name  = azurerm_resource_group.jk_rg.name
-  virtual_network_name = azurerm_virtual_network.jk_vn.name
-  address_prefixes     = ["10.0.2.0/24"]
+resource "azurerm_subnet" "odoo_sn" {
+  name                 = "sn-${var.name}-${var.short}"
+  resource_group_name  = azurerm_resource_group.rg_odoo.name
+  virtual_network_name = azurerm_virtual_network.odoo_vn.name
+  address_prefixes     = ["10.0.8.0/24"]
 }

@@ -1,0 +1,39 @@
+- name: Instance reverse proxy
+  hosts: rproxy
+  become: true
+  tasks:
+    - name: Delete default files 
+      ansible.builtin.file:
+        path: "/etc/nginx/sites-enabled/default"
+        state: absent
+      ignore_errors: true 
+
+    - name: Creating configuration file for intances
+      ansible.builtin.lineinfile:
+        path: "/etc/nginx/sites-enabled/{{ item.split(' ')[0] }}"
+        create: yes
+        line: |
+          server {
+            server_name _;  
+            location / {  
+              proxy_pass http://10.0.8.100:{{ item.split(' ')[2] }};
+              include proxy_params;
+            }
+            listen {{ item.split(' ')[1] }};
+          }
+      loop: "{{ instances }}"
+
+    - name: rules output iptables
+      ansible.builtin.command:
+        cmd: "sudo iptables -A OUTPUT -p tcp --dport {{ item.split(' ')[1] }} -j ACCEPT"
+      loop: "{{ instances }}"  
+
+    - name: rules input iptables
+      ansible.builtin.command:
+        cmd: "sudo iptables -A INPUT -p tcp --dport {{ item.split(' ')[1] }} -j ACCEPT"
+      loop: "{{ instances }}" 
+
+    - name: 'Restart nginx'
+      ansible.builtin.service:
+        name: nginx
+        state: restarted

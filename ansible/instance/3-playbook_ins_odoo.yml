@@ -1,0 +1,77 @@
+- name: create and deploy containers
+  hosts: odoo
+  become: true
+  tasks:
+
+    - name: vérify instances repository already exists
+      ansible.builtin.file:
+        path: '/root/instances'
+        state: directory
+        owner: root
+        mode: '0755'
+
+    - name: verify instances already exists
+      ansible.builtin.file:
+        path: "/root/instances/{{ item.split(' ')[0] }}"
+        state: directory
+        owner: root
+        mode: '0755'
+      loop: "{{ instances }}"
+
+    - name: Create docker compose
+      ansible.builtin.copy:
+        dest: "/root/instances/{{ item.split(' ')[0] }}/docker-compose.yml"
+        content: |
+          version: '3.1'
+          services:
+            change-volume-owner:
+              image: odoo:latest
+              user: root
+              volumes:
+                - ./odoo-data:/var/lib/odoo
+              command: chown -R odoo:odoo /var/lib/odoo
+
+            web:
+              image: odoo:latest
+              container_name: {{ item.split(' ')[0] }}
+              volumes:
+                - ./odoo-data:/var/lib/odoo
+                - ./config:/etc/odoo
+              ports:
+                - {{ item.split(' ')[2] }}:8069
+              depends_on:
+                - change-volume-owner
+      loop: "{{ instances }}"
+
+
+    - name: Verify config repository already exists
+      ansible.builtin.file:
+        path: "/root/instances/{{ item.split(' ')[0] }}/config"
+        state: directory
+        owner: root
+        mode: '0755'
+      loop: "{{ instances }}"
+
+    - name: Create odoo.conf
+      ansible.builtin.copy:
+        dest: "/root/instances/{{ item.split(' ')[0] }}/config/odoo.conf"
+        content: |
+          [options]
+
+          addons_path = /mnt/extra-addons
+          data_dir = /var/lib/odoo
+
+          admin_passwd = root
+          db_host = 10.0.8.101
+          db_name = {{ item.split(' ')[0] }}_db
+          db_port = 5432
+          db_user = {{ item.split(' ')[0] }}_user
+          db_password = root
+          db_maxconn = 64
+        mode: '0755'
+      loop: "{{ instances }}"
+
+    - name: Up containers
+      ansible.builtin.command:
+        cmd: "docker compose -f /root/instances/{{ item.split(' ')[0] }}/docker-compose.yml up -d"
+      loop: "{{ instances }}"
